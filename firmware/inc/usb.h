@@ -80,6 +80,11 @@ typedef struct {
 #define SET_CONFIGURATION 9
 #define GET_INTERFACE 10
 
+//Class specific requests
+#define GET_REPORT 1
+#define GET_IDLE 2
+#define SET_IDLE 0x0A
+
 //Request constant
 #define REQUEST_RMASK 0x07
 #define REQUEST_DEVICE 0

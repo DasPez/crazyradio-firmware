@@ -322,7 +322,6 @@ void usbSetupIsr()
       return;
     }
 
-#ifdef PPM_JOYSTICK
     // HID requests
     if(SETUPBUF[1] == GET_DESCRIPTOR && (SETUPBUF[3]&0xF0)==0x20)
     {
@@ -346,7 +345,6 @@ void usbSetupIsr()
       usbBulkInIsr(0);
       return;
     }
-#endif //PPM_JOYSTICK
 
     //Set address
     if (setup->request == SET_ADDRESS)
@@ -549,9 +547,19 @@ void usbVendorIsr()
 }
 
 void usbClassIsr() {
+
+  __xdata struct controllStruct *setup = (__xdata void*)SETUPBUF;
+  
   if (state >= CONFIGURED)
   {
-    ;
+    if (setup->request == GET_REPORT) {
+
+    } else if (setup->request == GET_IDLE) {
+
+    } else if (setup->request == SET_IDLE) {
+
+    }
+    return;
   }
 
   EP0CS = EP0STALL;

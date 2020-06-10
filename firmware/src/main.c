@@ -71,6 +71,12 @@ static bool needAck = true;
 
 static volatile unsigned char mode = MODE_LEGACY;
 
+static uint8_t test_counter = 0;
+
+void keyboard_test(uint8_t key);
+
+static uint8_t key = 0x04;
+
 void main()
 {
   CKCON = 2;
@@ -141,9 +147,38 @@ void main()
       modCarrierRun();
     }
 
+    if (test_counter == 255) {
+      test_counter = 0;
+      keyboard_test(key);
+      key = (key==0x04)?0x05:0x04;
+    }
+
+    test_counter++;
+    
     //USB vendor setup handling
     if(usbIsVendorSetup())
       handleUsbVendorSetup();
+  }
+}
+
+void keyboard_test(uint8_t keycode) {
+  
+  unsigned char test_report[8] = {
+  0x00, // no modifier
+  0x00, // reserved
+  keycode,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00
+  };
+
+  //Send report by USB
+  if (!(IN2CS&EPBSY)) {
+    memcpy(IN2BUF, test_report, 8);
+    //Activate the IN EP
+    IN2BC = 8;
   }
 }
 
