@@ -106,7 +106,7 @@ __code const unsigned char usbConfigurationDescriptor[57] = {
   0x82,                      //bEndpointAddess (EP2 IN)
   0x03,                      //bmAttributes (Interrupt endpoint)
   0x08, 0x00,                //wMaxPacketSize (8 bytes)
-  10,                        //bInterval (10ms (100Hz update))
+  8,                        //bInterval (8ms (125Hz update))
 };
 
 //HID Keyboard report descriptor
