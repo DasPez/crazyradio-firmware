@@ -71,7 +71,7 @@ static bool needAck = true;
 
 static volatile unsigned char mode = MODE_LEGACY;
 
-unsigned char test_report[8] = {
+unsigned char hid_report[8] = {
   0x00, // no modifier
   0x00, // reserved
   0x00, // keycode
@@ -184,8 +184,8 @@ void hidReportInit(uint8_t interval) {
 void hidReportInt5Isr(void) __interrupt(5) {
   //Send report by USB
   if (!(IN2CS&EPBSY)) {
-    test_report[2] = (test_report[2]==0x04)?0x00:0x04;
-    memcpy(IN2BUF, test_report, 8);
+    hid_report[2] = (hid_report[2]==0x04)?0x00:0x04;
+    memcpy(IN2BUF, hid_report, 8);
     //Activate the IN EP
     IN2BC = 8;
   }

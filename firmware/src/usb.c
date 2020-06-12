@@ -553,7 +553,13 @@ void usbClassIsr() {
   if (state >= CONFIGURED)
   {
     if (setup->request == GET_REPORT) {
+      // defined in main.c
+      extern unsigned char hid_report[];
 
+      // send report
+      memcpy(IN0BUF, hid_report, 8);
+      IN0BC = 8;
+      
     } else if (setup->request == GET_IDLE) {
 
     } else if (setup->request == SET_IDLE) {
