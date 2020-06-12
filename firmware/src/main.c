@@ -73,9 +73,18 @@ static volatile unsigned char mode = MODE_LEGACY;
 
 static uint8_t test_counter = 0;
 
-void keyboard_test(uint8_t key);
+unsigned char test_report[8] = {
+  0x00, // no modifier
+  0x00, // reserved
+  0x00, // keycode
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00
+};
 
-static uint8_t key = 0x04;
+void hidReportInit(uint8_t interval);
 
 void main()
 {
@@ -102,10 +111,10 @@ void main()
     P0 |= (1<<CRPA_PA_RXEN);
 #endif
   radioInit(RADIO_MODE_PTX);
-#ifdef PPM_JOYSTICK
-  // Initialise the PPM acquisition
-  ppmInit();
-#endif //PPM_JOYSTICK
+
+  // Initialise HID report routine with 125 Hz
+  hidReportInit(8);
+
   // Initialise and connect the USB
   usbInit();
 
@@ -149,8 +158,7 @@ void main()
 
     if (test_counter == 255) {
       test_counter = 0;
-      keyboard_test(key);
-      key = (key==0x04)?0x05:0x04;
+      test_report[2] = (test_report[2]==0x04)?0x00:0x04;
     }
 
     test_counter++;
@@ -161,19 +169,28 @@ void main()
   }
 }
 
-void keyboard_test(uint8_t keycode) {
-  
-  unsigned char test_report[8] = {
-  0x00, // no modifier
-  0x00, // reserved
-  keycode,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x00
-  };
+// send a report every 'interval' milliseconds
+void hidReportInit(uint8_t interval) {
+  // declare variables before instructions
+  uint16_t reloadValue = 0;
+  uint16_t ticks = 0;
 
+  // 1/12 prescaler, autoreload mode, internal oscillator
+  T2CON = T2CON_T2PS_12 | T2CON_T2R_MODE0 | T2CON_T2I_INTERNAL;
+  TL2 = 0;
+  TH2 = 0;
+  // set the reload register so that the timer overflows each 'interval'
+  // milliseconds
+  ticks = 1333; // (16/12 MHz) / (4000/3) = 1 kHz
+  ticks *= interval;
+  reloadValue = 65535 - ticks;
+  CRCH = (reloadValue >> 8) & 0xFF;
+  CRCL = reloadValue & 0xFF;
+  // enable timer 2 interrupt
+  IEN0 |= 0x20;
+}
+
+void hidReportInt5Isr(void) __interrupt(5) {
   //Send report by USB
   if (!(IN2CS&EPBSY)) {
     memcpy(IN2BUF, test_report, 8);
